@@ -123,7 +123,7 @@ $MachineStatus = Get-BrokerMachine -AdminAddress $Config.CitrixDC
 Write-Performance -Name "machine_status" -Command "Get-BrokerMachine" -StopWatch $StopWatch
 
 foreach ($Machine in $MachineStatus) {
-    $MachineName = $Machine.MachineName.split("\")[1]
+    $MachineName = $Machine.MachineName.split("\")[1].ToLower()
     $Catalog = $Machine.CatalogName
     if ($Config.StripCatalogPrefix.Length -gt 0) {
         $Catalog = $Catalog.Replace($Config.StripCatalogPrefix, "")
