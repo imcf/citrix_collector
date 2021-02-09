@@ -10,6 +10,31 @@ $MSPrefix = "${Pfx}_machine_status"
 $PfxDuration = "${Pfx}_collector_duration_ms"
 
 
+
+function Write-MetricHeader {
+    param (
+        # the metric name (prefix will be added automatically)
+        [Parameter(Mandatory=$True)]
+        [string]
+        $Name,
+
+        # the metric type
+        [Parameter(Mandatory=$True)]
+        [ValidateSet('gauge', 'counter')]
+        [string]
+        $Type,
+
+        # a string that will be used for the "HELP" entry in the prometheus output
+        [Parameter(Mandatory=$False)]
+        [string]
+        $Description="Metric without additional description from citrix_collector."
+    )
+    $MetricName = "${Pfx}_${Name}"
+    Write-Output "# HELP $MetricName $Description"
+    Write-Output "# TYPE $MetricName $Type"
+}
+
+
 function Write-Performance {
     param (
         # the collector's name, e.g. "licenses"
@@ -30,18 +55,56 @@ function Write-Performance {
     if ($StopWatch.IsRunning) {
         $StopWatch.Stop()
     }
-    $Message = "${PfxDuration}{collector=`"$Name`", command=`"$Command`"} "
-    $Message += $($StopWatch.ElapsedMilliseconds)
-    Write-Output $Message
+    Write-Gauge -Name "collector_duration_ms" `
+        -Properties "collector=`"$Name`", command=`"$Command`"" `
+        -Value $StopWatch.ElapsedMilliseconds `
+        -Header $False
+}
 
+
+function Write-Gauge {
+    param (
+        # the name that will be used for the metric (prefix will be added automatically)
+        [Parameter(Mandatory=$True)]
+        [string]
+        $Name,
+
+        # the gauge value
+        [Parameter(Mandatory=$True)]
+        [int]
+        $Value,
+        
+        # properties to be added to the metric inside the curly brackets {}
+        [Parameter(Mandatory=$False)]
+        [string]
+        $Properties="",
+        
+        # a string that will be used for the "HELP" entry in the prometheus output
+        [Parameter(Mandatory=$False)]
+        [string]
+        $Description="Metric without additional description from citrix_collector.",
+
+        # flag to disable the "HELP" and "TYPE" header for this metric
+        [Parameter(Mandatory=$False)]
+        [bool]
+        $Header=$True
+    )
+    $MetricName = "${Pfx}_${Name}"
+    if ($Header) {
+        Write-MetricHeader -Name $Name -Description $Description -Type "gauge"
+    }
+    Write-Output "$MetricName{$Properties} $Value"
 }
 
 
 $StopWatch = [Diagnostics.Stopwatch]::StartNew()
 $BrokerSite = Get-BrokerSite
 Write-Performance -Name "licenses" -Command "Get-BrokerSite" -StopWatch $StopWatch
-Write-Output "${Pfx}_licenses_sessions_active{} $($BrokerSite.LicensedSessionsActive)"
-Write-Output "${Pfx}_licenses_peak_concurrent_users{} $($BrokerSite.PeakConcurrentLicenseUsers)"
+Write-Gauge -Name "licenses_sessions_active" -Value $BrokerSite.LicensedSessionsActive `
+    -Description "Current number of licenses in use (LicensedSessionsActive)."
+Write-Gauge -Name "licenses_peak_concurrent_users" `
+    -Value $BrokerSite.PeakConcurrentLicenseUsers `
+    -Description "Peak number of concurrent license users (PeakConcurrentLicenseUsers)."
 
 # Get-BrokerCatalog
 # Get-BrokerController
