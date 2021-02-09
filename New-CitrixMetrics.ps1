@@ -38,8 +38,7 @@ function Write-MetricHeader {
         $Description="Metric without additional description from citrix_collector."
     )
     $MetricName = "${Pfx}_${Name}"
-    Write-Output "# HELP $MetricName $Description"
-    Write-Output "# TYPE $MetricName $Type"
+    return "# HELP $MetricName $Description`n# TYPE $MetricName $Type"
 }
 
 
@@ -101,7 +100,7 @@ function Write-Gauge {
     if ($Header) {
         Write-MetricHeader -Name $Name -Description $Description -Type "gauge"
     }
-    Write-Output "$MetricName{$Properties} $Value"
+    return "$MetricName{$Properties} $Value"
 }
 
 
