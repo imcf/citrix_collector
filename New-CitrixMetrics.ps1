@@ -13,7 +13,7 @@ $Config = Import-PowerShellDataFile "$PSScriptRoot\Configuration\Config.psd1"
 
 Add-PSSnapIn Citrix.*
 
-$Pfx = $Config.PrometheusCollectorPrefix
+$Global:Pfx = $Config.PrometheusCollectorPrefix
 $MSPrefix = "${Pfx}_machine_status"
 $PfxDuration = "${Pfx}_collector_duration_ms"
 
