@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+    Collect Citrix XenDesktop metrics and format them for Prometheus.
+.DESCRIPTION
+    Collect metrics from a Citrix Delivery Controller (license usage, machine status,
+    ...) and formats them such that they are to be digested by the "windows_exporter"
+    Prometheus service using the `textfile` collector.
+#>
 
 $ErrorActionPreference = "Stop"
 
