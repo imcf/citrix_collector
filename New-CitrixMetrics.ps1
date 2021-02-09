@@ -163,7 +163,7 @@ foreach ($Machine in $MachineStatus) {
     
     $Entry = "$MSPrefix{"
     $Entry += "machine_name=`"$MachineName`", "
-    # $Entry += "catalog=`"$Catalog`", "
+    $Entry += "catalog=`"$Catalog`", "
     $Entry += "status=`"$Status`", "
     $Entry += "maintenance=`"$Maintenance`", "
     $Entry += "username=`"$Username`", "
