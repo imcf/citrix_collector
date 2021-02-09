@@ -19,7 +19,7 @@ $PfxDuration = "${Pfx}_collector_duration_ms"
 
 
 
-function Write-MetricHeader {
+function New-MetricHeader {
     param (
         # the metric name (prefix will be added automatically)
         [Parameter(Mandatory=$True)]
@@ -98,7 +98,7 @@ function Write-Gauge {
     )
     $MetricName = "${Pfx}_${Name}"
     if ($Header) {
-        Write-MetricHeader -Name $Name -Description $Description -Type "gauge"
+        New-MetricHeader -Name $Name -Description $Description -Type "gauge"
     }
     return "$MetricName{$Properties} $Value"
 }
