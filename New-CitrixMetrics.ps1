@@ -48,7 +48,7 @@ Write-Output "${Pfx}_licenses_peak_concurrent_users{} $($BrokerSite.PeakConcurre
 # Get-BrokerDesktopGroup
 
 $StopWatch = [Diagnostics.Stopwatch]::StartNew()
-$MachineStatus = & "$PSScriptRoot\Get-MachineStatus.ps1" -Format rawfull
+$MachineStatus = Get-BrokerMachine -AdminAddress $Config.CitrixDC
 Write-Performance -Name "machine_status" -Command "Get-BrokerMachine" -StopWatch $StopWatch
 
 foreach ($Machine in $MachineStatus) {
