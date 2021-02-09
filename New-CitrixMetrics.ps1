@@ -15,8 +15,41 @@ Add-PSSnapIn Citrix.*
 
 $Global:Pfx = $Config.PrometheusCollectorPrefix
 $MSPrefix = "${Pfx}_machine_status"
-$PfxDuration = "${Pfx}_collector_duration_ms"
 
+
+class PerformanceMetric {
+    [string] $Collector
+    [string] $Command
+    [Diagnostics.Stopwatch] $StopWatch
+    
+    PerformanceMetric(
+        [string] $Collector,
+        [string] $Command
+    ) {
+        $this.StopWatch = [Diagnostics.Stopwatch]::StartNew()
+        $this.Collector = $Collector
+        $this.Command = $Command
+    }
+
+    [void] Measure() {
+        if ($this.StopWatch.IsRunning) {
+            $this.StopWatch.Stop()
+        }
+    }
+
+    [int] Milliseconds() {
+        if ($this.StopWatch.IsRunning) {
+            return -1
+        }
+        return $this.StopWatch.ElapsedMilliseconds
+    }
+
+    [string] ToString() {
+        $Pfx = $Global:Pfx
+        $Properties = "collector=`""+$this.Collector+"`", command=`""+$this.Command+"`""
+        return "${Pfx}_collector_duration_ms{$Properties} $($this.Milliseconds())"
+    }
+}
 
 
 function New-MetricHeader {
@@ -44,28 +77,13 @@ function New-MetricHeader {
 
 function Write-Performance {
     param (
-        # the collector's name, e.g. "licenses"
+        # the PerformanceMetric object
         [Parameter(Mandatory=$True)]
-        [string]
-        $Name,
-
-        # the collector's command, e.g. "Get-BrokerSite"
-        [Parameter(Mandatory=$True)]
-        [string]
-        $Command,
-
-        # the stopwatch instance used to measure the collector's performance
-        [Parameter(Mandatory=$True)]
-        [Diagnostics.Stopwatch]
-        $StopWatch
+        [PerformanceMetric]
+        $Metric
     )
-    if ($StopWatch.IsRunning) {
-        $StopWatch.Stop()
-    }
-    Write-Gauge -Name "collector_duration_ms" `
-        -Properties "collector=`"$Name`", command=`"$Command`"" `
-        -Value $StopWatch.ElapsedMilliseconds `
-        -Header $False
+    $Metric.Measure()
+    return $Metric.ToString()
 }
 
 
@@ -104,9 +122,9 @@ function Write-Gauge {
 }
 
 
-$StopWatch = [Diagnostics.Stopwatch]::StartNew()
-$BrokerSite = Get-BrokerSite
-Write-Performance -Name "licenses" -Command "Get-BrokerSite" -StopWatch $StopWatch
+$Metric = [PerformanceMetric]::new("licenses", "Get-BrokerSite")
+$BrokerSite = Get-BrokerSite -AdminAddress $Config.CitrixDC
+Write-Performance $Metric
 Write-Gauge -Name "licenses_sessions_active" -Value $BrokerSite.LicensedSessionsActive `
     -Description "Current number of licenses in use (LicensedSessionsActive)."
 Write-Gauge -Name "licenses_peak_concurrent_users" `
@@ -117,9 +135,10 @@ Write-Gauge -Name "licenses_peak_concurrent_users" `
 # Get-BrokerController
 # Get-BrokerDesktopGroup
 
-$StopWatch = [Diagnostics.Stopwatch]::StartNew()
+$Metric = [PerformanceMetric]::new("machine_status", "Get-BrokerMachine")
 $MachineStatus = Get-BrokerMachine -AdminAddress $Config.CitrixDC
-Write-Performance -Name "machine_status" -Command "Get-BrokerMachine" -StopWatch $StopWatch
+Write-Performance $Metric
+
 
 foreach ($Machine in $MachineStatus) {
     $MachineName = $Machine.MachineName.split("\")[1].ToLower()
