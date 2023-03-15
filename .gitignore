@@ -1,2 +1,6 @@
+Logs/
 Configuration/Config.psd1
 citrix_collector.log
+
+# WinSW executable:
+/winsw*.exe
