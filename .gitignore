@@ -2,5 +2,6 @@ Logs/
 Configuration/Config.psd1
 citrix_collector.log
 
-# WinSW executable:
+# WinSW executable and actual config file (may contain credentials!):
 /winsw*.exe
+/winsw.xml
