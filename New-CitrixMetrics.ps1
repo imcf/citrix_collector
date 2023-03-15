@@ -142,7 +142,7 @@ Write-Performance $Metric
 
 foreach ($Machine in $MachineStatus) {
     $MachineName = $Machine.MachineName.split("\")[1].ToLower()
-    $Catalog = $Machine.CatalogName
+    $Catalog = $Machine.DesktopGroupName
     if ($Config.StripCatalogPrefix.Length -gt 0) {
         $Catalog = $Catalog.Replace($Config.StripCatalogPrefix, "")
     }
